@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows.Input;
 using Dynamo.Controls;
 using Dynamo.Core;
 using Dynamo.Graph.Nodes;
@@ -191,11 +192,14 @@ namespace Dynamo.UI.Controls
         /// The AvalonEdit CanUndo check ensures that if the user typed and then
         /// deleted back to empty, Ctrl-Z restores the text rather than removing
         /// the node from the canvas.
+        /// Also marks graph navigation shortcuts as handled so window-level
+        /// KeyBindings (zoom, pan, fit view, auto layout, 3D nav) do not run
+        /// while typing in the code block.
         /// </summary>
-        protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
+        protected override void OnPreviewKeyDown(KeyEventArgs e)
         {
-            if (e.Key == System.Windows.Input.Key.Z
-                && e.KeyboardDevice.Modifiers == System.Windows.Input.ModifierKeys.Control
+            if (e.Key == Key.Z
+                && e.KeyboardDevice.Modifiers == ModifierKeys.Control
                 && createdForNewCodeBlock
                 && string.IsNullOrEmpty(InnerTextEditor.Text)
                 && !InnerTextEditor.Document.UndoStack.CanUndo)
@@ -205,7 +209,47 @@ namespace Dynamo.UI.Controls
                 return;
             }
 
+            var key = e.Key == Key.System ? e.SystemKey : e.Key;
+            if (IsBlockedGraphShortcut(key, e.KeyboardDevice.Modifiers))
+            {
+                e.Handled = true;
+                return;
+            }
+
             base.OnPreviewKeyDown(e);
+        }
+
+        /// <summary>
+        /// Graph shortcuts that should not fire while the code block editor has focus.
+        /// Kept local to the editor (no shared view-model flag).
+        /// </summary>
+        internal static bool IsBlockedGraphShortcut(Key key, ModifierKeys modifiers)
+        {
+            if (modifiers == ModifierKeys.Control)
+            {
+                switch (key)
+                {
+                    case Key.L:          // Auto layout
+                    case Key.P:          // Toggle 3D pan
+                    case Key.B:          // Toggle 3D background navigation
+                    case Key.D0:         // Fit view
+                    case Key.OemPlus:    // Zoom in
+                    case Key.OemMinus:   // Zoom out
+                    case Key.Add:        // Zoom in (numpad)
+                    case Key.Subtract:   // Zoom out (numpad)
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            // Canvas pan
+            if (modifiers == (ModifierKeys.Control | ModifierKeys.Alt))
+            {
+                return key == Key.Left || key == Key.Right || key == Key.Up || key == Key.Down;
+            }
+
+            return false;
         }
 
         private void DiscardChangesAndOptionallyRemoveNode()
