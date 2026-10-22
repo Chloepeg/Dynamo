@@ -194,7 +194,8 @@ namespace Dynamo.UI.Controls
         /// the node from the canvas.
         /// Also marks graph navigation shortcuts as handled so window-level
         /// KeyBindings (zoom, pan, fit view, auto layout, 3D nav) do not run
-        /// while typing in the code block.
+        /// while typing in the code block. Escape-hold geometry preview is blocked
+        /// in DynamoView_KeyDown when a code editor has focus.
         /// </summary>
         protected override void OnPreviewKeyDown(KeyEventArgs e)
         {
@@ -233,8 +234,10 @@ namespace Dynamo.UI.Controls
                     case Key.P:          // Toggle 3D pan
                     case Key.B:          // Toggle 3D background navigation
                     case Key.O:          // Open graph
+                    case Key.T:          // Open Template
                     case Key.N:          // New graph
                     case Key.W:          // Add note
+                    case Key.K:          // Unpin all preview bubbles
                     case Key.D0:         // Fit view
                     case Key.OemPlus:    // Zoom in
                     case Key.OemMinus:   // Zoom out
@@ -250,6 +253,27 @@ namespace Dynamo.UI.Controls
             if (modifiers == (ModifierKeys.Control | ModifierKeys.Alt))
             {
                 return key == Key.Left || key == Key.Right || key == Key.Up || key == Key.Down;
+            }
+
+            if (modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
+                switch (key)
+                {
+                    case Key.S:  // Save As
+                    case Key.I:  // Insert graph
+                    case Key.N:  // New custom node
+                    case Key.Up: // Toggle console
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            // F5 runs the graph; Shift+F5 cancels — block both while editing
+            if (key == Key.F5
+                && (modifiers == ModifierKeys.None || modifiers == ModifierKeys.Shift))
+            {
+                return true;
             }
 
             return false;
