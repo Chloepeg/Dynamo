@@ -233,6 +233,7 @@ namespace Dynamo.UI.Controls
                     case Key.L:          // Auto layout
                     case Key.P:          // Toggle 3D pan
                     case Key.B:          // Toggle 3D background navigation
+                    case Key.I:          // Isolation mode
                     case Key.O:          // Open graph
                     case Key.T:          // Open Template
                     case Key.N:          // New graph

@@ -12,6 +12,7 @@ namespace DynamoCoreWpfTests
         [TestCase(Key.L, ModifierKeys.Control)]
         [TestCase(Key.P, ModifierKeys.Control)]
         [TestCase(Key.B, ModifierKeys.Control)]
+        [TestCase(Key.I, ModifierKeys.Control)]
         [TestCase(Key.O, ModifierKeys.Control)]
         [TestCase(Key.N, ModifierKeys.Control)]
         [TestCase(Key.T, ModifierKeys.Control)]
