@@ -673,9 +673,15 @@ namespace Dynamo.ViewModels
         internal const double AIHaloMovedOpacity = 0.4;
 
         /// <summary>
+        /// Halo opacity for an error, warning, or info message on a placed or modified node.
+        /// </summary>
+        internal const double AIHaloAlertOpacity = 0.6;
+
+        /// <summary>
         /// How strongly the AI-touched halo behind this node is drawn, from 0 (no halo) to 1:
         /// full strength when the AI Assistant placed or modified the node, 40% when it only moved
-        /// it, and 0 when the node has no AI change record (<see cref="NodeModel.AIChange"/>).
+        /// it, 60% when a placed or modified node shows an error, warning, or info message, and 0
+        /// when the node has no AI change record (<see cref="NodeModel.AIChange"/>).
         /// </summary>
         internal double AIHaloOpacity
         {
@@ -684,9 +690,21 @@ namespace Dynamo.ViewModels
                 var change = NodeModel?.AIChange;
                 if (change == null) return 0;
 
-                return change.Kind == AIChangeKind.Moved ? AIHaloMovedOpacity : AIHaloFullOpacity;
+                var opacity = change.Kind == AIChangeKind.Moved ? AIHaloMovedOpacity : AIHaloFullOpacity;
+                if (opacity > AIHaloAlertOpacity && ShowsAlert)
+                {
+                    return AIHaloAlertOpacity;
+                }
+
+                return opacity;
             }
         }
+
+        /// <summary>
+        /// True when the node shows an error, warning, or info message.
+        /// Preview off does not count, and it does not dim the halo.
+        /// </summary>
+        private bool ShowsAlert => ErrorBubble != null && ErrorBubble.DoesNodeDisplayMessages;
 
         /// <summary>
         /// A flag indicating whether the node is set to freeze by the user.
@@ -1293,6 +1311,7 @@ namespace Dynamo.ViewModels
                     RaisePropertyChanged("State");
                     HandleColorOverlayChange();
                     RaisePropertyChanged(nameof(NodeWarningBarVisible));
+                    RaisePropertyChanged(nameof(AIHaloOpacity));
                     break;
                 case "ArgumentLacing":
                     RaisePropertyChanged("ArgumentLacing");
@@ -1356,6 +1375,7 @@ namespace Dynamo.ViewModels
                 case nameof(ErrorBubble.DoesNodeDisplayMessages):
                     HandleColorOverlayChange();
                     RaisePropertyChanged(nameof(NodeWarningBarVisible));
+                    RaisePropertyChanged(nameof(AIHaloOpacity));
                     break;
             }
         }
